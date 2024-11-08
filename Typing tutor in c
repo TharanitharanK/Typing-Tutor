@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+
+#define MAX_WORD_LENGTH 20
+
+typedef struct Node {
+	char word[MAX_WORD_LENGTH];
+	struct Node* next;
+} Node;
+
+long long currentTimeMillis() {
+	struct timespec ts;
+	timespec_get(&ts, TIME_UTC);
+	return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000;
+}
+
+void addWord(Node** head, const char* word) {
+	Node* newNode = (Node*)malloc(sizeof(Node));
+	strcpy(newNode->word, word);
+	newNode->next = *head;
+	*head = newNode;
+}
+
+void shuffle(Node** head) {
+	Node* current = *head;
+	int length = 0;
+	while (current != NULL) {
+		length++;
+		current = current->next;
+	}
+	char words[length][MAX_WORD_LENGTH];
+	current = *head;
+	for (int i = 0; i < length; i++) {
+		strcpy(words[i], current->word);
+		current = current->next;
+	}
+	for (int i = length - 1; i > 0; i--) {
+		int j = rand() % (i + 1);
+		char temp[MAX_WORD_LENGTH];
+		strcpy(temp, words[i]);
+		strcpy(words[i], words[j]);
+		strcpy(words[j], temp);
+	}
+	current = *head;
+	for (int i = 0; i < length; i++) {
+		strcpy(current->word, words[i]);
+		current = current->next;
+	}
+}
+
+void freeList(Node* head) {
+	Node* temp;
+	while (head != NULL) {
+		temp = head;
+		head = head->next;
+		free(temp);
+	}
+}
+
+int main() {
+	srand(time(0));
+	Node* wordList = NULL;
+	char* words[] = { "programming", "computer", "keyboard", "typist", "accuracy", "speed", "practice", "skill", "performance", "challenge" };
+	for (int i = 0; i < 10; i++) {
+		addWord(&wordList, words[i]);
+	}
+	shuffle(&wordList);
+	printf("Typing Tutor\n");
+	printf("Type the following words as fast and accurately as you can:\n");
+	int correctCount = 0;
+	long long startTime = currentTimeMillis();
+	Node* current = wordList;
+	while (current != NULL) {
+		printf("%s: ", current->word);
+		char input[MAX_WORD_LENGTH];
+		scanf("%s", input);
+		if (strcmp(current->word, input) == 0) {
+			correctCount++;
+		}
+		current = current->next;
+	}
+	long long endTime = currentTimeMillis();
+	double timeTaken = (endTime - startTime) / 1000.0;
+	printf("\nResults:\n");
+	printf("Correct Words: %d/10\n", correctCount);
+	printf("Time Taken: %.2f seconds\n", timeTaken);
+	printf("Words Per Minute: %.2f\n", (correctCount / timeTaken) * 60);
+	freeList(wordList);
+	return 0;
+}
